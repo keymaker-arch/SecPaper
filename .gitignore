@@ -1,0 +1,27 @@
+# Build artifacts
+/target/
+**/*.rs.bk
+*.pdb
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+
+# Configuration files (may contain secrets)
+config.toml
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test outputs
+test-output/
