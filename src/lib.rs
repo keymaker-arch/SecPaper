@@ -8,6 +8,7 @@
 //! The system is organized into several key modules:
 //!
 //! - **models**: Core data structures (Paper, Author, SearchResult, etc.)
+//! - **provider**: Paper metadata sources (JSON files, APIs, etc.)
 //! - **embedding**: Text embedding generation and normalization
 //! - **storage**: Database persistence and retrieval (SQLite-based)
 //! - **query**: Search execution and ranking algorithms
@@ -18,7 +19,7 @@
 //!
 //! ## Offline Ingestion
 //!
-//! 1. Load paper metadata from input sources
+//! 1. Fetch paper metadata from providers (JSON files, APIs, etc.)
 //! 2. Normalize titles for deduplication
 //! 3. Generate embeddings for paper abstracts
 //! 4. Store papers and embeddings in SQLite database
@@ -64,6 +65,7 @@
 pub mod embedding;
 pub mod ingestion;
 pub mod models;
+pub mod provider;
 pub mod query;
 pub mod server;
 pub mod storage;
@@ -71,6 +73,7 @@ pub mod storage;
 // Re-export commonly used types at the crate root
 pub use models::{Author, Paper, SearchResult, RelevanceLevel, EmbeddingConfig};
 pub use embedding::EmbeddingProvider;
+pub use provider::PaperProvider;
 pub use storage::{PaperStorage, YearRange};
 pub use query::{SearchEngine, SearchQuery};
 

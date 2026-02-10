@@ -15,6 +15,10 @@ SecPaper/
     ├── models/
     │   └── mod.rs              # Core data structures (Paper, Author, SearchResult, etc.)
     │
+    ├── provider/
+    │   ├── mod.rs              # PaperProvider trait and error types
+    │   └── json.rs             # JSON file provider implementation
+    │
     ├── embedding/
     │   ├── mod.rs              # EmbeddingProvider trait and text normalization
     │   └── openai.rs           # OpenAI API implementation
@@ -47,6 +51,12 @@ SecPaper/
   - `SearchResult`: Search result with relevance scoring
   - `RelevanceLevel`: Categorical relevance classification
   - `EmbeddingConfig`: Embedding model configuration
+
+- **provider**: Paper metadata source abstraction
+  - `PaperProvider` trait: Interface for sourcing papers from various backends
+  - `ProviderError`: Error types for provider operations
+  - `JsonFileProvider`: JSON file-based provider for testing and offline datasets
+  - Future providers: ArXiv API, Semantic Scholar API, PDF parsers
 
 - **embedding**: Text embedding abstraction
   - `EmbeddingProvider` trait: Interface for embedding generation

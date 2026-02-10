@@ -6,8 +6,10 @@
 use mcp_paper_search::{
     embedding::openai::OpenAIEmbedding,
     ingestion::IngestionPipeline,
+    provider::{json::JsonFileProvider, PaperProvider},
     storage::sqlite::SqliteStorage,
 };
+use std::path::PathBuf;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -31,11 +33,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Initializing pipeline...");
     pipeline.initialize().await?;
     
-    // TODO: Load papers from input source
-    // TODO: Process papers in batches
-    // TODO: Display progress and statistics
+    // TODO: Parse input file path from command-line args
+    let input_file = PathBuf::from("papers.json");
     
-    println!("Ingestion pipeline completed successfully");
+    // Create provider and load papers
+    println!("Loading papers from {:?}...", input_file);
+    let provider = JsonFileProvider::new(input_file);
+    let papers = provider.fetch_papers().await?;
+    println!("Loaded {} papers", papers.len());
+    
+    // Process papers in batches
+    println!("Processing papers...");
+    let stats = pipeline.ingest_batch(&papers).await?;
+    
+    // Display statistics
+    println!("\nIngestion completed:");
+    println!("  Total processed: {}", stats.total_processed);
+    println!("  Inserted: {}", stats.inserted);
+    println!("  Duplicates skipped: {}", stats.duplicates_skipped);
+    println!("  Failed: {}", stats.failed);
+    
+    println!("\nIngestion pipeline completed successfully");
     
     Ok(())
 }

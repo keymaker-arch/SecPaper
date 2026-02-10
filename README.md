@@ -20,6 +20,7 @@ The system consists of two main components:
 ### Modules
 
 - `models`: Core data structures (Paper, Author, SearchResult)
+- `provider`: Paper metadata sources (JSON files, APIs, etc.)
 - `embedding`: Text embedding generation (OpenAI integration)
 - `storage`: SQLite-based persistence layer
 - `query`: Search execution and ranking
@@ -52,6 +53,25 @@ cargo build --release
 ```
 
 ## Usage
+
+### Data Preparation
+
+Prepare your paper metadata in JSON format. Create a file (e.g., `papers.json`) with an array of papers:
+
+```json
+[
+  {
+    "title": "Paper Title",
+    "authors": [
+      {"name": "Author Name", "affiliation": "University"}
+    ],
+    "abstract_text": "Paper abstract...",
+    "publish_year": 2023
+  }
+]
+```
+
+See [papers.example.json](papers.example.json) for a complete example with real papers.
 
 ### Ingestion Pipeline
 

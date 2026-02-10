@@ -87,7 +87,25 @@ Online query (after MCP server starts)
   +---------------+
 ```
 
-## 3. Module: Ingestion Pipeline
+## 3. Module: Paper Provider
+Design:
+- Abstract interface (trait) for sourcing paper metadata from various providers.
+- Each provider implementation handles its own data format and API interactions.
+- Yields normalized paper metadata in a common format for ingestion.
+
+Role:
+- Decouples data sources from ingestion logic.
+- Allows extensibility to support multiple paper databases (ArXiv, Semantic Scholar, etc.).
+- Provides a uniform interface for the ingestion pipeline.
+
+Tech details:
+- Core trait: PaperProvider with methods to yield paper metadata.
+- Paper metadata structure: title, authors (with affiliations), abstract, publish_year.
+- Provider implementations handle pagination, rate limiting, and error recovery.
+- MVP may include a simple JSON file provider for initial testing.
+- Future providers: ArXiv API, Semantic Scholar API, PDF parsers, etc.
+
+## 4. Module: Ingestion Pipeline
 Design:
 - Batch process input metadata into a normalized, deduplicated dataset.
 - Compute and store embeddings alongside metadata.
@@ -103,7 +121,7 @@ Tech details:
 - Embeddings stored as float32 arrays serialized into BLOB.
 - Outputs one SQLite file and a small config file with model name + vector dimension.
 
-## 4. Module: Storage Layer
+## 5. Module: Storage Layer
 Design:
 - SQLite v1 schema optimized for MVP requirements.
 - A storage interface abstracts future backends (e.g., vector DBs).
@@ -121,7 +139,7 @@ Table: papers
 - publish_year (INTEGER)  -- used for optional range filter
 - embedding (BLOB)  -- serialized float32
 
-## 5. Module: Embedding Strategy
+## 6. Module: Embedding Strategy
 Design:
 - Embedding computation isolated behind a trait/interface.
 - Text normalization shared between ingestion and query paths.
@@ -136,7 +154,7 @@ Tech details:
 - Normalization: lowercase, trim, collapse spaces.
 - Store model name and vector dimension in config.
 
-## 6. Module: Query & Ranking
+## 7. Module: Query & Ranking
 Design:
 - Compute query embedding and rank by cosine similarity.
 - Apply optional publish year range filter.
@@ -150,7 +168,7 @@ Tech details:
 - Keep vector search interface to swap in Qdrant or similar later.
 - Relevance labels: IDENTICAL, HIGHLY_SIMILAR, SIMILAR, RELEVANT (expandable).
 
-## 7. Module: MCP Server API
+## 8. Module: MCP Server API
 Design:
 - Single MCP endpoint for search, with future room for admin endpoints.
 
