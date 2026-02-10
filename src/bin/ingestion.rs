@@ -6,7 +6,7 @@
 use mcp_paper_search::{
     embedding::openai::OpenAIEmbedding,
     ingestion::IngestionPipeline,
-    provider::{json::JsonFileProvider, PaperProvider},
+    provider::{json::JsonFilePaperProvider, PaperProvider},
     storage::sqlite::SqliteStorage,
 };
 use std::path::PathBuf;
@@ -36,15 +36,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // TODO: Parse input file path from command-line args
     let input_file = PathBuf::from("papers.json");
     
-    // Create provider and load papers
+    // Create provider
     println!("Loading papers from {:?}...", input_file);
-    let provider = JsonFileProvider::new(input_file);
-    let papers = provider.fetch_papers().await?;
-    println!("Loaded {} papers", papers.len());
+    let provider = JsonFilePaperProvider::from_file(input_file).await?;
     
-    // Process papers in batches
+    // Get paper count for progress tracking
+    let paper_count = provider.count_papers().await?;
+    println!("Found {} papers from {}", paper_count, provider.name());
+    
+    // Process papers directly from provider
     println!("Processing papers...");
-    let stats = pipeline.ingest_batch(&papers).await?;
+    let stats = pipeline.ingest_from_provider(&provider).await?;
     
     // Display statistics
     println!("\nIngestion completed:");

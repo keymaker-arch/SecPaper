@@ -15,6 +15,10 @@ This project provides semantic search over research papers by:
 The system consists of two main components:
 
 1. **Ingestion Pipeline** (`ingestion` binary): Offline process that builds the searchable database
+   - Uses PaperProvider abstraction to fetch papers from various sources (JSON files, APIs, etc.)
+   - Normalizes and deduplicates papers
+   - Generates embeddings via EmbeddingProvider
+   - Persists to SQLite storage
 2. **MCP Server** (`mcp-server` binary): Online service that handles search queries
 
 ### Modules
@@ -80,6 +84,12 @@ Run the ingestion pipeline to build the database:
 ```bash
 cargo run --bin ingestion -- --input papers.json --output papers.db
 ```
+
+The ingestion pipeline:
+1. Loads papers from the specified input source using a PaperProvider (currently JSON files)
+2. Normalizes paper titles and checks for duplicates
+3. Generates embeddings for paper abstracts using OpenAI API
+4. Stores papers and embeddings in a SQLite database
 
 Input format should be a JSON array of papers:
 ```json

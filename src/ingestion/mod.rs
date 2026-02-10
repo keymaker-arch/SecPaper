@@ -7,6 +7,7 @@ use thiserror::Error;
 
 use crate::embedding::{normalize_text, EmbeddingProvider};
 use crate::models::{EmbeddingConfig, Paper};
+use crate::provider::{PaperProvider, ProviderError};
 use crate::storage::PaperStorage;
 
 /// Errors that can occur during ingestion.
@@ -19,6 +20,10 @@ pub enum IngestionError {
     /// Storage operation failed
     #[error("Storage error: {0}")]
     StorageError(String),
+    
+    /// Provider operation failed
+    #[error("Provider error: {0}")]
+    ProviderError(#[from] ProviderError),
     
     /// Invalid input data
     #[error("Invalid input: {0}")]
@@ -186,5 +191,36 @@ where
     /// The normalized title (lowercase, trimmed, collapsed spaces)
     pub fn normalize_title(title: &str) -> String {
         normalize_text(title)
+    }
+    
+    /// Ingest papers from a provider.
+    ///
+    /// This is the primary method for running the ingestion pipeline with a data source.
+    /// It fetches papers from the provider and processes them in batches.
+    ///
+    /// # Arguments
+    /// * `provider` - A reference to a paper provider that supplies paper metadata
+    ///
+    /// # Returns
+    /// Statistics about the ingestion run
+    ///
+    /// # Errors
+    /// Returns `IngestionError` if papers cannot be fetched from the provider
+    /// or if the batch cannot be processed
+    ///
+    /// # Example
+    /// ```ignore
+    /// let provider = JsonFilePaperProvider::from_file("papers.json").await?;
+    /// let stats = pipeline.ingest_from_provider(&provider).await?;
+    /// ```
+    pub async fn ingest_from_provider<P>(&mut self, provider: &P) -> IngestionResult<IngestionStats>
+    where
+        P: PaperProvider,
+    {
+        // Fetch all papers from the provider
+        let papers = provider.fetch_papers().await?;
+        
+        // Process papers using the existing batch ingestion logic
+        self.ingest_batch(&papers).await
     }
 }

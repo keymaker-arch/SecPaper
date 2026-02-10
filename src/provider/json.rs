@@ -30,9 +30,11 @@ use super::{PaperProvider, ProviderError, ProviderResult};
 ///   }
 /// ]
 /// ```
-pub struct JsonFileProvider {
+pub struct JsonFilePaperProvider {
     /// Path to the JSON file
-    file_path: PathBuf,
+    _file_path: PathBuf,
+    /// Deserialized paper data
+    papers: Vec<Paper>,
 }
 
 /// Raw paper data from JSON input (may have different field names).
@@ -54,39 +56,27 @@ struct JsonAuthor {
     affiliation: Option<String>,
 }
 
-impl JsonFileProvider {
-    /// Create a new JSON file provider.
+impl JsonFilePaperProvider {
+    /// Create a new JSON file provider by loading and deserializing papers from a file.
     ///
     /// # Arguments
     /// * `file_path` - Path to the JSON file containing paper metadata
     ///
     /// # Returns
-    /// A new `JsonFileProvider` instance
-    pub fn new(file_path: PathBuf) -> Self {
-        Self { file_path }
-    }
-    
-    /// Validate the file exists and is readable.
+    /// A new `JsonFilePaperProvider` instance with papers loaded into memory
     ///
     /// # Errors
-    /// Returns `ProviderError::IoError` if the file doesn't exist or isn't readable
-    pub async fn validate(&self) -> ProviderResult<()> {
-        if !self.file_path.exists() {
+    /// Returns `ProviderError` if the file doesn't exist, can't be read, or contains invalid JSON
+    pub async fn from_file(file_path: PathBuf) -> ProviderResult<Self> {
+        // Validate the file exists
+        if !file_path.exists() {
             return Err(ProviderError::ConfigError(
-                format!("File does not exist: {:?}", self.file_path)
+                format!("File does not exist: {:?}", file_path)
             ));
         }
         
-        fs::metadata(&self.file_path).await?;
-        Ok(())
-    }
-}
-
-#[async_trait]
-impl PaperProvider for JsonFileProvider {
-    async fn fetch_papers(&self) -> ProviderResult<Vec<Paper>> {
         // Read the JSON file
-        let content = fs::read_to_string(&self.file_path).await?;
+        let content = fs::read_to_string(&file_path).await?;
         
         // Parse the JSON
         let json_papers: Vec<JsonPaper> = serde_json::from_str(&content)
@@ -111,15 +101,20 @@ impl PaperProvider for JsonFileProvider {
             })
             .collect();
         
-        Ok(papers)
+        Ok(Self { _file_path: file_path, papers })
+    }
+}
+
+#[async_trait]
+impl PaperProvider for JsonFilePaperProvider {
+    async fn fetch_papers(&self) -> ProviderResult<Vec<Paper>> {
+        // Return a clone of the stored papers
+        Ok(self.papers.clone())
     }
     
     async fn count_papers(&self) -> ProviderResult<usize> {
-        // For JSON files, we can count efficiently by parsing metadata only
-        let content = fs::read_to_string(&self.file_path).await?;
-        let json_papers: Vec<JsonPaper> = serde_json::from_str(&content)
-            .map_err(|e| ProviderError::ParseError(format!("Failed to parse JSON: {}", e)))?;
-        Ok(json_papers.len())
+        // Return the count of stored papers
+        Ok(self.papers.len())
     }
     
     fn name(&self) -> &str {
@@ -158,7 +153,7 @@ mod tests {
         write!(temp_file, "{}", json_data).unwrap();
         
         // Create provider and fetch papers
-        let provider = JsonFileProvider::new(temp_file.path().to_path_buf());
+        let provider = JsonFilePaperProvider::from_file(temp_file.path().to_path_buf()).await.unwrap();
         let papers = provider.fetch_papers().await.unwrap();
         
         // Verify results
@@ -181,7 +176,7 @@ mod tests {
         ]"#;
         write!(temp_file, "{}", json_data).unwrap();
         
-        let provider = JsonFileProvider::new(temp_file.path().to_path_buf());
+        let provider = JsonFilePaperProvider::from_file(temp_file.path().to_path_buf()).await.unwrap();
         let count = provider.count_papers().await.unwrap();
         
         assert_eq!(count, 2);
@@ -192,11 +187,11 @@ mod tests {
         let mut temp_file = NamedTempFile::new().unwrap();
         write!(temp_file, "[]").unwrap();
         
-        let provider = JsonFileProvider::new(temp_file.path().to_path_buf());
-        assert!(provider.validate().await.is_ok());
+        let provider = JsonFilePaperProvider::from_file(temp_file.path().to_path_buf()).await;
+        assert!(provider.is_ok());
         
         // Test with non-existent file
-        let provider = JsonFileProvider::new(PathBuf::from("/nonexistent/file.json"));
-        assert!(provider.validate().await.is_err());
+        let result = JsonFilePaperProvider::from_file(PathBuf::from("/nonexistent/file.json")).await;
+        assert!(result.is_err());
     }
 }

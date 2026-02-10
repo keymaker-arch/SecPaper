@@ -32,28 +32,34 @@ Workflow diagram (offline build and online query paths):
 ```
 Offline build (before MCP server starts)
   +-----------------------+
-  |  Input Metadata Feed  |
+  |  Paper Provider       |
+  |  (JSON, API, etc.)    |
   +-----------+-----------+
               |
               v
-      +---------------+
-      | Normalization |
-      +-------+-------+
-              |
-              v
-        +-----------+
-        |  Dedup    |
-        +-----+-----+
-              |
-              v
-    +-------------------+
-    | Embedding Provider|
-    +---------+---------+
-              |
-              v
-      +---------------+
-      |   SQLite DB   |
-      +---------------+
+      +-------------------+
+      | Ingestion Pipeline|
+      +---------+---------+
+                |
+                v
+        +--------------+
+        | Normalization|
+        +------+-------+
+               |
+               v
+         +-----------+
+         |  Dedup    |
+         +-----+-----+
+               |
+               v
+     +-------------------+
+     | Embedding Provider|
+     +---------+---------+
+               |
+               v
+       +---------------+
+       |   SQLite DB   |
+       +---------------+
 
 Online query (after MCP server starts)
   +---------------+
@@ -108,18 +114,23 @@ Tech details:
 ## 4. Module: Ingestion Pipeline
 Design:
 - Batch process input metadata into a normalized, deduplicated dataset.
+- Uses the Paper Provider abstraction to fetch papers from various sources.
 - Compute and store embeddings alongside metadata.
 - Persist all records into a single SQLite file before server start.
 
 Role:
 - Produces the searchable offline database.
 - Enforces deduplication to avoid re-ingesting the same paper.
+- Integrates with any PaperProvider implementation to support multiple data sources.
 
 Tech details:
 - Deduplication key: normalized paper title (lowercase, trimmed, collapsed spaces).
 - Embedding model: OpenAI text-embedding-3-small.
 - Embeddings stored as float32 arrays serialized into BLOB.
 - Outputs one SQLite file and a small config file with model name + vector dimension.
+- Primary method: `ingest_from_provider()` accepts a PaperProvider reference and processes all papers.
+- Legacy method: `ingest_batch()` accepts a slice of papers directly (for advanced use cases).
+- Statistics tracking: counts inserted, duplicates, and failed papers.
 
 ## 5. Module: Storage Layer
 Design:

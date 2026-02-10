@@ -77,6 +77,8 @@ SecPaper/
 - **ingestion**: Offline data processing
   - `IngestionPipeline`: Coordinates embedding and storage
   - `IngestionStats`: Processing statistics
+  - `ingest_from_provider()`: Primary ingestion method that fetches papers from a PaperProvider
+  - `ingest_batch()`: Legacy method for direct paper processing
   - Deduplication by normalized title
 
 - **server**: MCP server implementation
@@ -91,11 +93,12 @@ SecPaper/
 
 ## Key Design Patterns
 
-1. **Trait-based abstraction**: Storage, embedding, and search are all behind traits
+1. **Trait-based abstraction**: Storage, embedding, provider, and search are all behind traits
 2. **Async-first**: All I/O operations are async using tokio
 3. **Type safety**: Strong typing with serde for serialization
 4. **Error handling**: Custom error types with thiserror
 5. **Separation of concerns**: Clear module boundaries
+6. **Provider pattern**: Ingestion pipeline delegates paper sourcing to PaperProvider implementations
 
 ## Implementation Status
 
