@@ -3,6 +3,9 @@
 //! This module provides an implementation of the `EmbeddingProvider` trait
 //! using OpenAI's text embedding API.
 
+#![allow(unused_variables)]
+#![allow(dead_code)]
+#![allow(unused_imports)]
 use super::{EmbeddingError, EmbeddingProvider, EmbeddingResult};
 use async_trait::async_trait;
 

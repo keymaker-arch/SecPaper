@@ -1,12 +1,13 @@
 //! Embedding provider abstraction and implementations.
 //!
 //! This module defines the interface for text embedding generation and provides
-//! implementations for various embedding services (e.g., OpenAI).
+//! implementations for various embedding services (e.g., OpenAI, FastEmbed).
 //!
 //! The abstraction allows the system to swap between different embedding models
 //! without changing the core logic of ingestion or search.
 
 pub mod openai;
+pub mod fastembed;
 
 use async_trait::async_trait;
 use thiserror::Error;

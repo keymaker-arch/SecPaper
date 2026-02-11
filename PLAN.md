@@ -155,15 +155,25 @@ Design:
 - Embedding computation isolated behind a trait/interface.
 - Text normalization shared between ingestion and query paths.
 - Embedding provider abstraction so callers depend on a stable API, not a specific model.
+- Multiple provider implementations available:
+  - OpenAI: Cloud-based API using OpenAI's text-embedding models
+  - FastEmbed: Local embedding generation using the fastembed Rust library
 
 Role:
 - Produces consistent vectors for papers and user queries.
 - Allows future swap to local or hosted models.
+- Provides flexibility between API-based and local embedding generation.
 
 Tech details:
-- Model: OpenAI text-embedding-3-small.
+- OpenAI Model: text-embedding-3-small (1536 dimensions).
+- FastEmbed Default Model: AllMiniLML6V2 (384 dimensions).
 - Normalization: lowercase, trim, collapse spaces.
 - Store model name and vector dimension in config.
+- FastEmbed advantages:
+  - No API costs
+  - Runs locally without internet connection
+  - Better for batch processing large datasets
+  - Supports multiple open-source embedding models
 
 ## 7. Module: Query & Ranking
 Design:
@@ -218,7 +228,8 @@ SecPaper/
     │
     ├── embedding/
     │   ├── mod.rs              # EmbeddingProvider trait and text normalization
-    │   └── openai.rs           # OpenAI API implementation
+    │   ├── openai.rs           # OpenAI API implementation
+    │   └── fastembed.rs        # FastEmbed local embedding implementation
     │
     ├── storage/
     │   ├── mod.rs              # PaperStorage trait and types
@@ -259,6 +270,7 @@ SecPaper/
   - `EmbeddingProvider` trait: Interface for embedding generation
   - `normalize_text()`: Text normalization utility
   - `OpenAIEmbedding`: OpenAI API implementation
+  - `FastEmbedProvider`: Local embedding generation using fastembed library
 
 - **storage**: Data persistence layer
   - `PaperStorage` trait: Interface for paper storage

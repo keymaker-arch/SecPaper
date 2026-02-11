@@ -4,6 +4,9 @@
 //! top-k results. It coordinates between the embedding provider and storage layer
 //! to perform semantic search.
 
+#![allow(unused_variables)]
+#![allow(dead_code)]
+#![allow(unused_imports)]
 use async_trait::async_trait;
 use thiserror::Error;
 

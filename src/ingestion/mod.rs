@@ -3,6 +3,9 @@
 //! This module handles the offline ingestion pipeline that processes paper metadata,
 //! generates embeddings, performs deduplication, and persists data to storage.
 
+#![allow(unused_variables)]
+#![allow(dead_code)]
+#![allow(unused_imports)]
 use thiserror::Error;
 
 use crate::embedding::{normalize_text, EmbeddingProvider};

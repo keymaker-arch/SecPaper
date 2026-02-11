@@ -4,6 +4,9 @@
 //! the paper search functionality. It handles incoming requests, coordinates
 //! with the search engine, and formats responses.
 
+#![allow(unused_variables)]
+#![allow(dead_code)]
+#![allow(unused_imports)]
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
