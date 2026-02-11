@@ -227,6 +227,9 @@ Tech details:
   - Supports multiple open-source embedding models
 
 ## 7. Module: Query & Ranking
+
+**Status:** ✅ Implemented
+
 Design:
 - Compute query embedding and rank by cosine similarity.
 - Apply optional publish year range filter.
@@ -235,10 +238,21 @@ Design:
 Role:
 - Provides core search functionality for the MCP server.
 
+Implementation Details:
+- `BruteForceSearchEngine` implementation coordinates `EmbeddingProvider` and `PaperStorage`
+- Text normalization using `normalize_text()` applied to queries before embedding
+- Brute-force similarity computation across all papers (optimized via storage-level year filtering)
+- Results sorted by descending cosine similarity score
+- `RelevanceLevel` automatically assigned via score thresholds (IDENTICAL >0.95, HIGHLY_SIMILAR >0.85, SIMILAR >0.70, RELEVANT ≥0.0)
+- Error handling converts embedding and storage errors to `QueryError` variants
+- Comprehensive test coverage including mocks for embedding and storage providers
+
 Tech details:
 - MVP uses brute-force similarity search in SQLite.
 - Keep vector search interface to swap in Qdrant or similar later.
 - Relevance labels: IDENTICAL, HIGHLY_SIMILAR, SIMILAR, RELEVANT (expandable).
+- Cosine similarity function tested and validated with unit tests.
+- Full documentation with usage examples in module header.
 
 ## 8. Module: MCP Server API
 Design:
@@ -287,7 +301,7 @@ SecPaper/
     │   └── sqlite.rs           # SQLite storage implementation
     │
     ├── query/
-    │   └── mod.rs              # SearchEngine trait and BruteForceSearchEngine
+    │   └── mod.rs              # ✅ SearchEngine trait and BruteForceSearchEngine (IMPLEMENTED)
     │
     ├── ingestion/
     │   └── mod.rs              # IngestionPipeline for offline processing
