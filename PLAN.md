@@ -135,6 +135,54 @@ Tech details:
 - The pipeline reads embedding config from storage and validates that the provided embedding provider matches it.
 - For new storage, the pipeline initializes schema and stores the embedding provider's configuration.
 
+### Ingestion CLI Binary
+The `ingestion` binary provides a production-ready command-line interface for building and updating the paper database.
+
+**Command-Line Interface:**
+- `--input <FILE>`: Input JSON file containing paper metadata (required)
+- `--db-path <PATH>`: Database file path (default: `papers.db`)
+- `--mode <MODE>`: Operation mode - `connect` (default) or `init-new`
+- `--embedding-provider <PROVIDER>`: Embedding provider - `fastembed` (default) or `openai`
+- `--embedding-model <MODEL>`: Specific model name (optional, provider-dependent)
+- `--batch-size <N>`: Papers per embedding batch (default: 100)
+- `--log-level <LEVEL>`: Logging verbosity - error, warn, info, debug, trace (default: info)
+- `--cache-dir <DIR>`: FastEmbed model cache directory (default: `~/.cache/fastembed`)
+
+**Operation Modes:**
+- **connect** (default): Connect to existing database, validate embedding config matches, add new papers
+- **init-new**: Initialize new database with fresh schema and embedding configuration
+
+**Features:**
+- Automatic embedding config validation prevents mixing different embedding models
+- Real-time progress tracking with detailed statistics
+- Structured logging with adjustable verbosity levels
+- Automatic parent directory creation for database path
+- Comprehensive error messages with actionable suggestions
+- Deduplication in connect mode prevents re-ingesting existing papers
+
+**Default Configuration:**
+- Embedding provider: FastEmbed (AllMiniLML6V2, 384 dimensions)
+- Storage: SQLite
+- Paper provider: JSON file
+- Batch size: 100 papers
+- Log level: info
+
+**Example Commands:**
+```bash
+# Initialize new database with FastEmbed
+ingestion --mode init-new --input papers.json --db-path research.db
+
+# Add papers to existing database
+ingestion --input new_papers.json --db-path research.db
+
+# Use OpenAI embeddings with custom batch size
+OPENAI_API_KEY=sk-... ingestion --mode init-new --input papers.json \
+  --embedding-provider openai --batch-size 50
+
+# Debug mode with trace logging
+ingestion --input papers.json --log-level trace
+```
+
 ## 5. Module: Storage Layer
 Design:
 - SQLite v1 schema optimized for MVP requirements.
@@ -304,4 +352,16 @@ SecPaper/
 ### Binary Targets
 
 - **mcp_server**: Starts the MCP server for handling search queries
-- **ingestion**: Runs the offline pipeline to build the database
+  - Entry point: `src/bin/mcp_server.rs`
+  - Loads database and exposes search API
+  - Configurable host, port, and concurrency settings
+
+- **ingestion**: CLI tool for building and updating the paper database
+  - Entry point: `src/bin/ingestion.rs`
+  - Supports two modes: `connect` (add to existing) and `init-new` (create database)
+  - Configurable embedding provider (FastEmbed default, OpenAI optional)
+  - Progress tracking with detailed statistics display
+  - Validates embedding config consistency when adding to existing database
+  - Structured logging with adjustable verbosity (error/warn/info/debug/trace)
+  - Built with `clap` for robust CLI argument parsing
+  - Example: `ingestion --input papers.json --db-path research.db`

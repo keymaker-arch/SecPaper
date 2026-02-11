@@ -28,6 +28,19 @@ reqwest = { version = "0.13.2", features = ["json"] }
 # Embedding libraries
 fastembed = { version = "5.9.0", features = ["ort-download-binaries"] }
 
+# CLI argument parsing
+clap = { version = "4.5", features = ["derive", "env"] }
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Progress bars
+indicatif = "0.17"
+
+# Directory utilities
+dirs = "5.0"
+
 # MCP protocol
 # Note: Add actual MCP SDK dependency when available
 
