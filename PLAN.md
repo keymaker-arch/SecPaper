@@ -311,7 +311,8 @@ SecPaper/
     │
     └── bin/
         ├── mcp_server.rs       # MCP server binary entry point
-        └── ingestion.rs        # Ingestion pipeline binary entry point
+        ├── ingestion.rs        # Ingestion pipeline binary entry point
+        └── search.rs           # Search query binary entry point
 ```
 
 ## Module Overview
@@ -379,3 +380,47 @@ SecPaper/
   - Structured logging with adjustable verbosity (error/warn/info/debug/trace)
   - Built with `clap` for robust CLI argument parsing
   - Example: `ingestion --input papers.json --db-path research.db`
+- **search**: CLI tool for querying the paper database
+  - Entry point: `src/bin/search.rs`
+  - Executes semantic searches against a pre-built database
+  - Auto-detects embedding provider from database configuration
+  - Supports two operation modes:
+    - **Single-query mode**: Execute one query and exit (default)
+    - **Interactive REPL mode**: Multiple queries in an interactive session (`--interactive`)
+  - Flexible output formats:
+    - **Table format** (default): Human-friendly table with colored relevance levels
+    - **JSON format**: Machine-readable output for scripting (`--format json`)
+  - Search options:
+    - `--query <TEXT>`: Search query (required for single-query mode)
+    - `--top-k <N>`: Number of results to return (default: 10)
+    - `--year-start <YEAR>`, `--year-end <YEAR>`: Filter by publication year range
+    - `--db-path <PATH>`: Database file path (required)
+    - `--format [table|json]`: Output format (default: table)
+    - `--log-level <LEVEL>`: Logging verbosity (default: warn)
+  - Interactive mode commands:
+    - `<query>`: Execute search
+    - `/top N`: Change number of results
+    - `/year START END`: Set year filter
+    - `/year clear`: Clear year filter
+    - `/format [table|json]`: Toggle output format
+    - `/detail N`: Show full details for result rank N
+    - `/help`: Show available commands
+  - Dependencies:
+    - Requires database built by ingestion binary
+    - Embedding provider auto-detected from stored config
+    - For OpenAI models: `OPENAI_API_KEY` environment variable required
+    - For FastEmbed models: No external dependencies, runs locally
+  - Example commands:
+    ```bash
+    # Single query with default settings
+    search --db-path papers.db --query "neural networks"
+    
+    # JSON output with year filter
+    search --db-path papers.db --query "transformers" --format json --year-start 2020
+    
+    # Interactive mode
+    search --db-path papers.db --interactive
+    
+    # Top 20 results from recent papers
+    search --db-path papers.db --query "NLP" --top-k 20 --year-start 2020
+    ```

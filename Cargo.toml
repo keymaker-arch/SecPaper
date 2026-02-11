@@ -40,7 +40,11 @@ indicatif = "0.18.3"
 
 # Directory utilities
 dirs = "6.0"
+# Table formatting
+comfy-table = "7.1"
 
+# Interactive readline
+rustyline = "14.0"
 # MCP protocol
 # Note: Add actual MCP SDK dependency when available
 
@@ -55,6 +59,10 @@ path = "src/bin/mcp_server.rs"
 [[bin]]
 name = "ingestion"
 path = "src/bin/ingestion.rs"
+
+[[bin]]
+name = "search"
+path = "src/bin/search.rs"
 
 [lib]
 name = "mcp_paper_search"
