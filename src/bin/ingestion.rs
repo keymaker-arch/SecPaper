@@ -27,11 +27,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize components
     let embedding_provider = OpenAIEmbedding::new(api_key, None);
     let storage = SqliteStorage::new("papers.db".to_string());
-    let mut pipeline = IngestionPipeline::new(embedding_provider, storage, None);
     
-    // Initialize the pipeline
+    // Initialize the pipeline with new storage
     println!("Initializing pipeline...");
-    pipeline.initialize().await?;
+    let mut pipeline = IngestionPipeline::initialize_new(embedding_provider, storage, None).await?;
     
     // TODO: Parse input file path from command-line args
     let input_file = PathBuf::from("papers.json");

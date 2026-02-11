@@ -116,21 +116,24 @@ Design:
 - Batch process input metadata into a normalized, deduplicated dataset.
 - Uses the Paper Provider abstraction to fetch papers from various sources.
 - Compute and store embeddings alongside metadata.
-- Persist all records into a single SQLite file before server start.
+- Primary use case: Connect to existing storage and add new papers while respecting the stored embedding configuration.
+- Secondary use case: Initialize new storage with a specified embedding provider.
 
 Role:
-- Produces the searchable offline database.
+- Adds papers to the searchable database.
 - Enforces deduplication to avoid re-ingesting the same paper.
 - Integrates with any PaperProvider implementation to support multiple data sources.
+- Validates embedding provider consistency with stored configuration.
 
 Tech details:
 - Deduplication key: normalized paper title (lowercase, trimmed, collapsed spaces).
-- Embedding model: OpenAI text-embedding-3-small.
+- Embedding configuration stored in database (model name + vector dimension).
 - Embeddings stored as float32 arrays serialized into BLOB.
-- Outputs one SQLite file and a small config file with model name + vector dimension.
-- Primary method: `ingest_from_provider()` accepts a PaperProvider reference and processes all papers.
-- Legacy method: `ingest_batch()` accepts a slice of papers directly (for advanced use cases).
+- Primary workflow: `IngestionPipeline::connect()` -> validates embedding config -> `ingest_from_provider()`.
+- Secondary workflow: `IngestionPipeline::initialize_new()` -> stores embedding config -> `ingest_from_provider()`.
 - Statistics tracking: counts inserted, duplicates, and failed papers.
+- The pipeline reads embedding config from storage and validates that the provided embedding provider matches it.
+- For new storage, the pipeline initializes schema and stores the embedding provider's configuration.
 
 ## 5. Module: Storage Layer
 Design:
@@ -286,9 +289,12 @@ SecPaper/
 - **ingestion**: Offline data processing
   - `IngestionPipeline`: Coordinates embedding and storage
   - `IngestionStats`: Processing statistics
-  - `ingest_from_provider()`: Primary ingestion method that fetches papers from a PaperProvider
-  - `ingest_batch()`: Legacy method for direct paper processing
+  - `connect()`: Primary method to connect to existing storage and validate embedding config
+  - `initialize_new()`: Secondary method to initialize new storage with embedding config
+  - `ingest_from_provider()`: Main ingestion method that fetches papers from a PaperProvider
+  - `ingest_batch()`: Batch processing method for direct paper processing
   - Deduplication by normalized title
+  - Validates embedding provider consistency with stored configuration
 
 - **server**: MCP server implementation
   - `McpServer`: Server instance
